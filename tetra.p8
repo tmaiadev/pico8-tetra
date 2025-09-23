@@ -455,10 +455,10 @@ end
 -- 3 - z shape
 -- 4 - s shape
 -- 5 - l shape
--- 6 - triangle
-t._mk_shape=function()
-	return rnd({4}) 
-	--1+flr(rnd(6))
+-- 6 - reverse l
+-- 7 - triangle
+t._mk_shape=function() 
+	return 1+flr(rnd(7))
 end
 
 -- make direction
@@ -524,6 +524,7 @@ t._mk_blks=function(self)
 			)
 		end
 	elseif self.shape==3 then
+		-- z shape
 		if self.dir%2==0 then
 			--  x
 			-- xx
@@ -557,6 +558,7 @@ t._mk_blks=function(self)
 			))
 		end
 	elseif self.shape==4 then
+		-- s shape
 		if self.dir%2==0 then
 			-- x
 			-- xx
@@ -587,6 +589,201 @@ t._mk_blks=function(self)
 			))
 			add(blks,blk.new(
 				1,1,self.clr
+			))
+		end
+	elseif self.shape==5 then
+		-- l shape
+		if self.dir == 1 then
+			-- x
+			-- x
+			-- xx
+			add(blks,blk.new(
+				0,0,self.clr
+			))
+			add(blks,blk.new(
+				0,1,self.clr
+			))
+			add(blks,blk.new(
+				0,2,self.clr
+			))
+			add(blks,blk.new(
+				1,2,self.clr
+			))
+		elseif self.dir == 2 then
+			-- xxx
+			-- x
+			add(blks,blk.new(
+				0,0,self.clr
+			))
+			add(blks,blk.new(
+				1,0,self.clr
+			))
+			add(blks,blk.new(
+				2,0,self.clr
+			))
+			add(blks,blk.new(
+				0,1,self.clr
+			))
+		elseif self.dir == 3 then
+			-- xx
+			--  x
+			--  x
+			add(blks,blk.new(
+				0,0,self.clr
+			))
+			add(blks,blk.new(
+				1,0,self.clr
+			))
+			add(blks,blk.new(
+				1,1,self.clr
+			))
+			add(blks,blk.new(
+				1,2,self.clr
+			))
+		else
+			--   x
+			-- xxx
+			add(blks,blk.new(
+				2,0,self.clr
+			))
+			add(blks,blk.new(
+				0,1,self.clr
+			))
+			add(blks,blk.new(
+				1,1,self.clr
+			))
+			add(blks,blk.new(
+				2,1,self.clr
+			))
+		end
+	elseif self.shape==6 then
+		-- reverse l
+		if self.dir == 1 then
+			--  x
+			--  x
+			-- xx
+			add(blks,blk.new(
+				1,0,self.clr
+			))
+			add(blks,blk.new(
+				1,1,self.clr
+			))
+			add(blks,blk.new(
+				0,2,self.clr
+			))
+			add(blks,blk.new(
+				1,2,self.clr
+			))
+		elseif self.dir == 2 then
+			-- x
+			-- xxx
+			add(blks,blk.new(
+				0,0,self.clr
+			))
+			add(blks,blk.new(
+				0,1,self.clr
+			))
+			add(blks,blk.new(
+				1,1,self.clr
+			))
+			add(blks,blk.new(
+				2,1,self.clr
+			))
+		elseif self.dir == 3 then
+			-- xx
+			-- x
+			-- x
+			add(blks,blk.new(
+				0,0,self.clr
+			))
+			add(blks,blk.new(
+				1,0,self.clr
+			))
+			add(blks,blk.new(
+				0,1,self.clr
+			))
+			add(blks,blk.new(
+				0,2,self.clr
+			))
+		else
+			-- xxx
+			--   x
+			add(blks,blk.new(
+				0,0,self.clr
+			))
+			add(blks,blk.new(
+				1,0,self.clr
+			))
+			add(blks,blk.new(
+				2,0,self.clr
+			))
+			add(blks,blk.new(
+				2,1,self.clr
+			))
+		end
+	else
+	-- triangle
+		if self.dir == 1 then
+			--  x
+			-- xxx
+			add(blks,blk.new(
+				1,0,self.clr
+			))
+			add(blks,blk.new(
+				0,1,self.clr
+			))
+			add(blks,blk.new(
+				1,1,self.clr
+			))
+			add(blks,blk.new(
+				2,1,self.clr
+			))
+		elseif self.dir == 2 then
+			-- x
+			-- xx
+			-- x
+			add(blks,blk.new(
+				0,0,self.clr
+			))
+			add(blks,blk.new(
+				0,1,self.clr
+			))
+			add(blks,blk.new(
+				1,1,self.clr
+			))
+			add(blks,blk.new(
+				0,2,self.clr
+			))
+		elseif self.dir == 3 then
+			-- xxx
+			--  x
+			add(blks,blk.new(
+				0,0,self.clr
+			))
+			add(blks,blk.new(
+				1,0,self.clr
+			))
+			add(blks,blk.new(
+				2,0,self.clr
+			))
+			add(blks,blk.new(
+				1,1,self.clr
+			))
+		else
+			--  x
+			-- xx
+			--  x
+			add(blks,blk.new(
+				1,0,self.clr
+			))
+			add(blks,blk.new(
+				0,1,self.clr
+			))
+			add(blks,blk.new(
+				1,1,self.clr
+			))
+			add(blks,blk.new(
+				1,2,self.clr
 			))
 		end
 	end
