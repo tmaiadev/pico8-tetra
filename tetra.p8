@@ -38,6 +38,7 @@ gm.new=function()
 		setmetatable({},gm)
 
 	self.stg=stg.new()
+	self.score=score.new()
 	self.t=t.new(0,0) -- tetra
 	self.spd=1 -- speed
 	self.dlt=0 -- delta
@@ -89,9 +90,11 @@ gm.update=function(self)
 
 		if self.dlt==60 then
 			t.col+=1
+			self.score:add(1)
 		elseif btn(⬇️) and
 					self.dlt%4==0 then
 			t.col+=1
+			self.score:add(10)
 		end
 		
 		if t:collides(self.stg) then
@@ -156,6 +159,7 @@ gm.update=function(self)
 				
 			if shdw_y then
 				t.col=shdw_y
+				self.score:add(100)
 				self:t2stg()
 				self.tmr_mk_new_t
 					:start()
@@ -214,6 +218,15 @@ gm.draw=function(self)
 			end
 		end
 	end
+	
+	-- render score
+	print("score:", 84, 4, 7)
+	print(
+		self.score:get(),
+		84,
+		10,
+		7
+	)
 end
 
 -- tetra to stage
@@ -274,6 +287,7 @@ gm.check_for_filled_rows=
 					.ani_clr_row
 					:add(function()
 						self.stg:rm(row,dir)
+						self.score:add(100)
 				end)
 			end
 		end
@@ -986,6 +1000,53 @@ ani.reset=function(self)
 	self.frame=1
 	self.started=false
 	self.ended=false
+end
+-->8
+-- score
+
+score={}
+score.__index=score
+
+score.new=function()
+	local self=
+		setmetatable({}, score)
+	
+	self.d={0,0,0}
+	
+	return self
+end
+
+score.add=function(self, value)
+	self.d[1]+=value
+	
+	for i=1, #self.d-1 do
+		if self.d[i]>9999 then
+			local carry=flr(self.d[i]/10000)
+			self.d[i+1]+=carry
+			self.d[i]%=10000
+		else
+			break
+		end
+	end
+end
+
+score.get=function(self)
+	if self.d[3]>99 then
+		self.d[3]=99
+		self.d[2]=9999
+		self.d[1]=9999
+	end
+	
+	local s3=tostr(self.d[3])
+	while #s3<2 do s3="0"..s3 end
+	
+	local s2=tostr(self.d[2])
+	while #s2<4 do s2="0"..s2 end
+	
+	local s1=tostr(self.d[1])
+	while #s1<4 do s1="0"..s1 end
+	
+	return s3..s2..s1
 end
 __gfx__
 00000000d6d6d667efefeff7bababaa7a9a9aaa7c7c7c7778ee8e8e72ee2e2e71010101010101010202020200000000000000000000000000000000000000000
