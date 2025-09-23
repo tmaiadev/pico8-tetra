@@ -1,6 +1,22 @@
 pico-8 cartridge // http://www.pico-8.com
 version 43
 __lua__
+-- tetra
+-- copyright (c) 2025 thalles maia
+
+-- this program is free software: you can redistribute it and/or modify
+-- it under the terms of the gnu general public license as published by
+-- the free software foundation, either version 3 of the license, or
+-- any later version.
+
+-- this program is distributed in the hope that it will be useful,
+-- but without any warranty; without even the implied warranty of
+-- merchantability or fitness for a particular purpose.  see the
+-- gnu general public license for more details.
+
+-- you should have received a copy of the gnu general public license
+-- along with this program.  if not, see <https://www.gnu.org/licenses/>.
+
 function _init()
 	gm:new()
 end
@@ -23,8 +39,8 @@ gm.new=function()
 
 	self.stg=stg.new()
 	self.t=t.new(0,0) -- tetra
-	self.spd=1        -- speed
-	self.dlt=0								-- delta
+	self.spd=1 -- speed
+	self.dlt=0 -- delta
 	self.tmr_mk_new_t=
 		tmr.new(1)
 	self.ani_clr_row=
