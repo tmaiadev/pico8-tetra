@@ -89,16 +89,16 @@ gm.update=function(self)
 	if t then
 
 		if self.dlt==60 then
-			t.col+=1
+			t.y+=1
 			self.score:add(1)
 		elseif btn(⬇️) and
 					self.dlt%4==0 then
-			t.col+=1
+			t.y+=1
 			self.score:add(10)
 		end
 		
 		if t:collides(self.stg) then
-			t.col-=1
+			t.y-=1
 			self:t2stg()
 			self.tmr_mk_new_t
 				:start()
@@ -106,8 +106,8 @@ gm.update=function(self)
 		end
 		
 		-- reaches bottom
-		if t.col+t:h()>15 then
-			t.col=15-t:h()
+		if t.y+t:h()>15 then
+			t.y=15-t:h()
 			self:t2stg()
 			self.tmr_mk_new_t
 				:start()
@@ -115,50 +115,50 @@ gm.update=function(self)
 		end
 		
 		if btnp(⬅️) then
-			if t.row>0 then
-				t.row-=1
+			if t.x>0 then
+				t.x-=1
 			end
 			
 			if t:collides(self.stg) then
-				t.row+=1
+				t.x+=1
 			end
 		elseif btnp(➡️) then
-			t.row+=1
-			local rt=t.row+t:w()
+			t.x+=1
+			local rt=t.x+t:w()
 			
 			if rt>9
 				or t:collides(self.stg)
 				then
-				t.row-=1
+				t.x-=1
 			end
 		end 
 
 		-- rotate
 		if btnp(🅾️) or btnp(⬆️) then
-			local original_row=t.row
+			local original_x=t.x
 			t:rotate()
 			
-			if t.row<0 then
-				t.row=0
+			if t.x<0 then
+				t.x=0
 			end
 			
-			if t.row+t:w() > 9 then
-				t.row=9-t:w()
+			if t.x+t:w() > 9 then
+				t.x=9-t:w()
 			end
 			
 			if t:collides(self.stg)
 			then
 				t:rotate(true)
-				t.row=original_row
+				t.x=original_x
 			end
 		end
 		
 		if btn(⬇️) and btn(❎) then
 			local shdw_y=
-				t:shadow_col(self.stg)
+				t:shadow_y(self.stg)
 				
 			if shdw_y then
-				t.col=shdw_y
+				t.y=shdw_y
 				self.score:add(100)
 				self:t2stg()
 				self.tmr_mk_new_t
@@ -188,11 +188,11 @@ gm.draw=function(self)
 	
 	-- render tetra (shadow)
 	local shadow=t and
-		t:shadow_col(self.stg)
+		t:shadow_y(self.stg)
 	if shadow then
 		for b in all(t.blks) do
-			local x=t.row+b.row
-			local y=shadow+b.col
+			local x=t.x+b.x
+			local y=shadow+b.y
 			
 			mset(x,y,10)
 		end
@@ -201,8 +201,8 @@ gm.draw=function(self)
 	-- render tetra (player)
 	if t then
 		for b in all(t.blks) do
-			local x=t.row+b.row
-			local y=t.col+b.col
+			local x=t.x+b.x
+			local y=t.y+b.y
 	
 			mset(x,y,b.clr)
 		end
@@ -232,8 +232,8 @@ end
 -- tetra to stage
 gm.t2stg=function(self)
 	for b in all(self.t.blks) do
-		b.row+=self.t.row
-		b.col+=self.t.col
+		b.x+=self.t.x
+		b.y+=self.t.y
 		
 		stg:set(b)
 	end
@@ -278,15 +278,15 @@ gm.check_for_filled_rows=
 			:reset()
 		
 		for i=#rows,1,-1 do
-		local row=rows[i]
-			for col=0,9 do
-				local dir=row%2==0
-				 and 9-col
-				 or col
+		local y=rows[i]
+			for x=0,9 do
+				local dir=y%2==0
+				 and 9-x
+				 or x
 				self
 					.ani_clr_row
 					:add(function()
-						self.stg:rm(row,dir)
+						self.stg:rm(dir,y)
 						self.score:add(100)
 				end)
 			end
@@ -320,22 +320,22 @@ end
 
 stg.set=function(self,blk)
 	local m=self.map
-	local row=blk.row+1
-	local col=blk.col+1
+	local x=blk.x+1
+	local y=blk.y+1
 	
-	m[col][row]=blk
+	m[y][x]=blk
 end
 
-stg.rm=function(self,row,col)
-	self.map[row+1][col+1]=false
+stg.rm=function(self,x,y)
+	self.map[y+1][x+1]=false
 end
 
-stg.get=function(self,row,col)
+stg.get=function(self,x,y)
 		local m=self.map
-	 local c=m[col+1]
+	 local c=m[y+1]
 	 
 	 if not c then	return nil end
-	 return c[row+1]
+	 return c[x+1]
 end
 
 -- make map
@@ -428,15 +428,15 @@ blk={}
 blk.__index=blk
 
 blk.new=function(
-	row,
-	col, -- column
+	x,
+	y,
 	clr  -- color
 )
 	local self=
 		setmetatable({},blk)
 	
-	self.row=row or 0
-	self.col=col or 0
+	self.x=x or 0
+	self.y=y or 0
 	self.clr=clr or 1
 	
 	return self
@@ -447,12 +447,12 @@ end
 t={}
 t.__index=t
 
-t.new=function(row,col)
+t.new=function(x,y)
 	local self=
 		setmetatable({},t)
 
-	self.row=row or 0
-	self.col=col or 0
+	self.x=x or 0
+	self.y=y or 0
 	self.clr=self:_mk_clr()
 	self.shape=self:_mk_shape()
 	self.dir=self:_mk_dir()
@@ -808,31 +808,31 @@ end
 -- width
 -- return width
 t.w=function(self)
-	local r=0
+	local x=0
 	
 	for b in all(self.blks) do
-		r=max(r,b.row)
+		x=max(x,b.x)
 	end
 	
-	return r
+	return x
 end
 
 -- height
 -- return height
 t.h=function(self)
-	local r=0
+	local y=0
 	
 	for b in all(self.blks) do
-		r=max(r,b.col)
+		y=max(y,b.y)
 	end
 	
-	return r
+	return y
 end
 
 t.collides=function(self,stg)
 	for b in all(self.blks) do
-		local x=b.row+self.row
-		local y=b.col+self.col
+		local x=b.x+self.x
+		local y=b.y+self.y
 		
 		if stg:get(x,y) then
 			return true
@@ -844,7 +844,7 @@ end
 t.rotate=function(self, undo)
 	local dir=undo and -1 or 1
 	self.dir+=dir
-	self.row+=
+	self.x+=
 		self.dir_row_offset*dir
 	
 	if self.dir<1 then
@@ -858,23 +858,23 @@ t.rotate=function(self, undo)
 	self.blks=self:_mk_blks()
 end
 
-t.shadow_col=function(self,stg)
-	local original_col=self.col
-	local shadow_col=nil
+t.shadow_y=function(self,stg)
+	local original_y=self.y
+	local shadow_y=nil
 	
-	for y=self.col+1,15-self:h() do
-		self.col=y
+	for y=self.y+1,15-self:h() do
+		self.y=y
 		local collided = self:
 			collides(stg)
 		if collided then
 			break
 		else
-			shadow_col=y
+			shadow_y=y
 		end
 	end
 	
-	self.col=original_col
-	return shadow_col
+	self.y=original_y
+	return shadow_y
 end
 -->8
 -- utils
