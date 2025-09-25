@@ -47,8 +47,13 @@ gm.new=function()
 		tmr.new(1)
 	self.ani_clr_row=
 		ani.new(12)
+	self.ani_cmr_shk=
+		ani.new(60)
 	self.eyes_pos=nil
-
+	self.camera={x=0,y=0}
+	
+	self:_mk_cmr_shk_ani()
+	
 	_update60=function()
 		self:update()
 	end
@@ -66,6 +71,9 @@ gm.update=function(self)
 	if self.dlt>60 then
 		self.dlt=1
 	end
+			
+	-- animate camera shake
+	self.ani_cmr_shk:update()
 			
 	-- wait for row clear
 	-- animation to end
@@ -104,7 +112,12 @@ gm.update=function(self)
 			t.y-=1
 			self:t2stg()
 			self.tmr_mk_new_t
-				:start()
+					:start()
+
+			if btn(⬇️) then
+				self.ani_cmr_shk
+					:start()				
+			end
 			return
 		end
 		
@@ -114,6 +127,11 @@ gm.update=function(self)
 			self:t2stg()
 			self.tmr_mk_new_t
 				:start()
+			
+			if btn(⬇️) then
+				self.ani_cmr_shk
+					:start()				
+			end
 			return
 		end
 		
@@ -166,6 +184,8 @@ gm.update=function(self)
 				self:t2stg()
 				self.tmr_mk_new_t
 					:start()
+				self.ani_cmr_shk
+					:start()
 				return
 			end
 		end
@@ -175,7 +195,10 @@ end
 
 gm.draw=function(self)
 	cls()
-	camera(-1,2)
+	camera(
+		self.camera.x+-1,
+		self.camera.y+2
+	)
 
 	self:stg_bg_draw()	
 
@@ -213,15 +236,6 @@ gm.draw=function(self)
 	
 	-- render tetra eyes
 	if t then
-		local fst_blk_x=nil
-		local n_bloks=0
-		for b in all(t.blks)	do 
-			if b.y==0 and
-			not fst_blk_x then
-					fst_blk_x=b.x
-			end
-		end
-		
 		local sprite=11 -- default
 		
 		if self.dlt>15 and -- blink
@@ -234,10 +248,8 @@ gm.draw=function(self)
 			sprite=13
 		end
 		
-		self.eyes_pos={
-			x=t.x+fst_blk_x,
-			y=t.y
-		}
+		self.eyes_pos=self:
+			_calc_eyes_pos()
 		
 		spr(
 			sprite,
@@ -246,7 +258,7 @@ gm.draw=function(self)
 		)
 	elseif self.eyes_pos then
 		spr(
-			12,
+			14,
 			8*self.eyes_pos.x,
 			8*self.eyes_pos.y
 		)
@@ -284,13 +296,8 @@ end
 
 -- tetra to stage
 gm.t2stg=function(self)
-	for b in all(self.t.blks) do
-		b.x+=self.t.x
-		b.y+=self.t.y
-		
-		stg:set(b)
-	end
-	
+	self.eyes_pos=self:_calc_eyes_pos()
+	self.stg:set_tetra(self.t)
 	self.t=nil
 	self:check_for_filled_rows()
 end
@@ -356,6 +363,56 @@ gm.check_for_filled_rows=
 			:start()
 	end
 end
+
+-- calc eyes position
+gm._calc_eyes_pos=function(self)
+	local t=self.t
+	
+	if not t then
+		return self.eyes_pos or nil
+	end
+	
+	local fst_blk_x=nil
+	local fst_blk_y=nil
+
+	for b in all(t.blks)	do 
+		if not fst_blk_y
+		and not fst_blk_x then
+				fst_blk_x=b.x
+				fst_blk_y=b.y
+		end
+	end
+	
+	return {
+		x=t.x+fst_blk_x,
+		y=t.y+fst_blk_y
+	}
+end
+
+-- make camera shake
+-- animation frames
+gm._mk_cmr_shk_ani=
+	function(self)
+	
+	for i=15,1,-1 do
+		self.ani_cmr_shk:add(
+			function()
+				local x=i%3==0 and -1 or 1
+				local y=flr(i/3)*-1
+				
+				
+				self.camera={x=x,y=y}
+			end
+		)
+	end
+
+	self.ani_cmr_shk.on_end=
+	function()
+		self.camera.x=0
+		self.camera.y=0
+		self.ani_cmr_shk:reset()
+	end
+end
 -->8
 -- stage (stg)
 
@@ -371,12 +428,17 @@ stg.new=function()
 	return self
 end
 
-stg.set=function(self,blk)
-	local m=self.map
-	local x=blk.x+1
-	local y=blk.y+1
-	
-	m[y][x]=blk
+stg.set_tetra=function(self,t)
+	for b in all(t.blks) do
+		local x=b.x+t.x+1
+		local y=b.y+t.y+1
+		
+		self.map[y][x]=blk.new(
+			x,
+			y,
+			b.clr
+		)
+	end
 end
 
 stg.rm=function(self,x,y)
@@ -1070,9 +1132,14 @@ ani.clr=function(self)
 end
 
 ani.reset=function(self)
+	self.dlt=0
 	self.frame=1
 	self.started=false
 	self.ended=false
+	
+	for f in all(self.frames) do
+		f.fired=false
+	end
 end
 -->8
 -- score
@@ -1124,10 +1191,10 @@ end
 __gfx__
 00000000d6d6d667efefeff7bababaa7a9a9aaa7c7c7c7778ee8e8e72ee2e2e71010101010101010202020200000000000000000000000000000000000000000
 000000001dddddd62eeeeeef3bbbbbba4999999a1cccccc72888888e1222222e0000000001010101020202020010010000000000000000000000000000000000
-00000000ddddddd6eeeeeeefbbbbbbba9999999accccccc788888888222222221010101010101010202020200100001001100110010000100000000000000000
-000000001ddddddd2eeeeeee3bbbbbbb499999991ccccccc2888888e1222222e0000000001010101020202020070007000000000001001000000000000000000
-00000000ddddddd6eeeeeeefbbbbbbba9999999accccccc788888888222222221010101011111111202020200770077000000000070000700000000000000000
-000000001ddddddd2eeeeeee3bbbbbbb499999991ccccccc2888888e1222222e0101010101010101020202020710071010001000077007700000000000000000
+00000000ddddddd6eeeeeeefbbbbbbba9999999accccccc788888888222222221010101010101010202020200100001001100110010000100110011000000000
+000000001ddddddd2eeeeeee3bbbbbbb499999991ccccccc2888888e1222222e0000000001010101020202020070007000000000001001000070007000000000
+00000000ddddddd6eeeeeeefbbbbbbba9999999accccccc788888888222222221010101011111111202020200770077000000000070000700777077700000000
+000000001ddddddd2eeeeeee3bbbbbbb499999991ccccccc2888888e1222222e0101010101010101020202020710071010001000077007700070007000000000
 000000001dddddd62eeeeeef3bbbbbba4999999a1cccccc72888888e1222222e1010101011111111202020200710071001100110078007800000000000000000
 00000000111d1d1d222e2e2e333b3b3b44494949111c1c1c22282828111212120101010101010101020202020000000000000000000000000000000000000000
 00000000000770000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
