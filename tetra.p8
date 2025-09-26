@@ -450,12 +450,10 @@ gm._mk_gameover_ani=function(self)
 		for x=9,0,-1 do
 			self.ani_gameover:add(
 				function()
+					local x=y%2==0
+						and 9-x
+						or x
 					local b=self.stg:get(x,y)
-					local bb={ -- black block
-						y={6,7},
-						x={3,4,5,6}
-					}
-					
 					local l={} -- lettering
 					l[7]={}
 					l[7][3]=35 -- g
@@ -467,18 +465,22 @@ gm._mk_gameover_ani=function(self)
 					l[8][4]=40 -- v
 					l[8][5]=38 -- e
 					l[8][6]=41 -- r
-					
+					local bb={ -- black block
+						y={6,7},
+						x={3,4,5,6}
+					}
 					local is_bb=
 						l[y]
 						and l[y][x]
 					
-					if is_bb then	
+					if is_bb then
 						self.stg:set(
 							blk.new(
-								x,y,is_bb
+								x,
+								y,
+								is_bb
 							)
 						)
-						
 					elseif not b then
 						self.stg:set(
 							blk.new(
