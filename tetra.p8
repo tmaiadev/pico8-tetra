@@ -322,6 +322,20 @@ gm.draw=function(self)
 			28
 		)
 	end
+	
+	-- render tutorial
+	local lh=7 -- line height
+	local b=128 -- bottom	
+	
+	if self.gameover then
+		print("❎ restart", 84, b-lh, 7)
+	elseif self.t
+		and not self.ani_gameover.started
+		then
+		print("🅾️/⬆️ rot8", 84, b-lh*3, 7)
+		print("⬇️    fast", 84, b-lh*2, 7)
+		print("⬇️+❎ drop", 84, b-lh, 7)
+	end
 end
 
 -- tetra to stage
