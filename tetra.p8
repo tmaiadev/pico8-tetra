@@ -81,6 +81,11 @@ gm.update=function(self)
 	-- until game is
 	--  restarted
 	if self.gameover then
+	
+		if btnp(❎) then
+			self.new()
+		end
+		
 		return
 	end
 	
@@ -91,6 +96,7 @@ gm.update=function(self)
 	and not self.ani_gameover.ended
 	then
 		self.ani_gameover:update()
+
 		return
 	end
 	
