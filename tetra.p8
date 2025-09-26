@@ -18,7 +18,7 @@ __lua__
 -- along with this program.  if not, see <https://www.gnu.org/licenses/>.
 
 function _init()
-	gm:new()
+	gm.new()
 end
 
 function _update60()
@@ -33,7 +33,7 @@ end
 gm={}
 gm.__index=gm
 
-gm.new=function()
+gm.new=function(level)
 	local self=
 		setmetatable({},gm)
 
@@ -43,6 +43,8 @@ gm.new=function()
 	self.nxt_t=t.new(4,-2) -- next tetra
 	self.spd=1 -- speed
 	self.dlt=0 -- delta
+	self.lvl=level or 1
+	self.n_rows_cleared=0
 	self.tmr_mk_new_t=
 		tmr.new(1)
 	self.ani_clr_row=
@@ -126,7 +128,9 @@ gm.update=function(self)
 	local t=self.t
 	if t then
 
-		if self.dlt==60 then
+		local dlt_matches=
+			ceil(60/self.lvl)
+		if self.dlt%dlt_matches==0 then
 			t.y+=1
 			self.score:add(1)
 		elseif btn(⬇️) and
@@ -150,7 +154,10 @@ gm.update=function(self)
 
 			if btn(⬇️) then
 				self.ani_cmr_shk
-					:start()				
+					:start()
+				sfx_impact()				
+			else
+				sfx_pop()
 			end
 			return
 		end
@@ -166,6 +173,8 @@ gm.update=function(self)
 				self.ani_cmr_shk
 					:start()
 				sfx_impact()	
+			else
+				sfx_pop()
 			end
 			return
 		end
@@ -343,6 +352,12 @@ gm.draw=function(self)
 		)
 	end
 	
+	-- render level
+	if not self.gameover then
+		print("level:", 84, 44, 7)
+		print(self.lvl, 84, 50, 7)
+	end
+	
 	-- render tutorial
 	local lh=7 -- line height
 	local b=128 -- bottom	
@@ -393,6 +408,15 @@ gm.check_for_filled_rows=
 		get_filled_rows_idx()
 	
 	if #rows>0 then
+		self.n_rows_cleared+=#rows
+		
+		-- level up every
+		-- 4 rows cleared
+		if self.n_rows_cleared%4==0
+		and self.lvl<10 then
+			self.lvl+=1
+		end
+		
 		self
 			.ani_clr_row
 			:clr()
@@ -1386,7 +1410,9 @@ __sfx__
 0001000000530001000010000100001000300026000030000900000000060000500000000120000f0000c0000a00009000070000900005000040000400002000020000200001000010000100001000000000a000
 000700000b0500b0000b0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 00010000005500155003550075500c55011550165501a5501e5501e55000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-0012000028050003002305024050260500c000240502305021050080002105024050280501a000260502405023050220002305024050260502900028050240002405023000210501700021050020000000010000
+001000002d4002d4003740037400344003440030400230002f400304003240034400354003440032400304002f4002d4002c4002d400260002900028000240002400023000210001700021000020000000010000
+000f000015300103001530010300153001030015300103000e300153000e300153001030017300103001730010300173001430017300103001030010300103001030010300103001030010300103001030010300
+001000002d7002d7002d7002d7002d7002d7002d7002d700000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 __music__
-00 05424344
+00 05060708
 
