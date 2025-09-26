@@ -49,10 +49,14 @@ gm.new=function()
 		ani.new(12)
 	self.ani_cmr_shk=
 		ani.new(60)
+	self.ani_gameover=
+		ani.new(60)
 	self.eyes_pos=nil
 	self.camera={x=0,y=0}
+	self.gameover=false
 	
 	self:_mk_cmr_shk_ani()
+	self:_mk_gameover_ani()
 	
 	_update60=function()
 		self:update()
@@ -71,7 +75,25 @@ gm.update=function(self)
 	if self.dlt>60 then
 		self.dlt=1
 	end
-			
+	
+	-- no updates if
+	-- game is over
+	-- until game is
+	--  restarted
+	if self.gameover then
+		return
+	end
+	
+	-- wait for gameover
+	-- animation if it has
+	-- started
+	if self.ani_gameover.started
+	and not self.ani_gameover.ended
+	then
+		self.ani_gameover:update()
+		return
+	end
+	
 	-- animate camera shake
 	self.ani_cmr_shk:update()
 			
@@ -109,6 +131,12 @@ gm.update=function(self)
 		end
 		
 		if t:collides(self.stg) then
+			if t.y<=0 then
+				t=nil
+				self.ani_gameover:start()
+				return
+			end
+			
 			t.y-=1
 			self:t2stg()
 			self.tmr_mk_new_t
@@ -285,13 +313,15 @@ gm.draw=function(self)
 	)
 	
 	-- render preview
-	print("next:", 84, 20, 7)
-	rect(84, 26, 95, 37, 7)
-	spr(
-		self.nxt_t.preview,
-		86,
-		28
-	)
+	if not self.gameover then
+		print("next:", 84, 20, 7)
+		rect(84, 26, 95, 37, 7)
+		spr(
+			self.nxt_t.preview,
+			86,
+			28
+		)
+	end
 end
 
 -- tetra to stage
@@ -413,6 +443,64 @@ gm._mk_cmr_shk_ani=
 		self.ani_cmr_shk:reset()
 	end
 end
+
+-- gameover animation
+gm._mk_gameover_ani=function(self)
+	for y=15,0,-1 do
+		for x=9,0,-1 do
+			self.ani_gameover:add(
+				function()
+					local b=self.stg:get(x,y)
+					local bb={ -- black block
+						y={6,7},
+						x={3,4,5,6}
+					}
+					
+					local l={} -- lettering
+					l[7]={}
+					l[7][3]=35 -- g
+					l[7][4]=36 -- a
+					l[7][5]=37 -- m
+					l[7][6]=38 -- e
+					l[8]={}
+					l[8][3]=39 -- o
+					l[8][4]=40 -- v
+					l[8][5]=38 -- e
+					l[8][6]=41 -- r
+					
+					local is_bb=
+						l[y]
+						and l[y][x]
+					
+					if is_bb then	
+						self.stg:set(
+							blk.new(
+								x,y,is_bb
+							)
+						)
+						
+					elseif not b then
+						self.stg:set(
+							blk.new(
+								x,
+								y,
+								1
+							)
+						)
+					end
+				end
+			)
+
+		end -- eox
+	end -- eoy
+	
+	self.ani_gameover.on_end=
+		function()
+			self.t=nil
+			self.eyes_pos=nil
+			self.gameover=true
+	end
+end
 -->8
 -- stage (stg)
 
@@ -428,16 +516,24 @@ stg.new=function()
 	return self
 end
 
+stg.set=function(self, b)
+	self.map[b.y+1][b.x+1]=b
+end
+
 stg.set_tetra=function(self,t)
 	for b in all(t.blks) do
 		local x=b.x+t.x+1
 		local y=b.y+t.y+1
 		
-		self.map[y][x]=blk.new(
-			x,
-			y,
-			b.clr
-		)
+		if x>=1 and x<=10
+		and y>=1 and y<=16
+		then
+			self.map[y][x]=blk.new(
+				x,
+				y,
+				b.clr
+			)
+		end
 	end
 end
 
@@ -446,11 +542,13 @@ stg.rm=function(self,x,y)
 end
 
 stg.get=function(self,x,y)
-		local m=self.map
-	 local c=m[y+1]
+	 local row=self.map[y+1]
 	 
-	 if not c then	return nil end
-	 return c[x+1]
+	 if not row then
+	 	return nil
+	 end
+	 
+	 return row[x+1]
 end
 
 -- make map
@@ -605,7 +703,7 @@ end
 -- make color
 -- returns random
 -- block color
--- 1 gray
+-- 1 gray - exclusive for death screen
 -- 2 pink
 -- 3 green
 -- 4 orange
@@ -613,7 +711,7 @@ end
 -- 6 red
 -- 7 maroon 
 t._mk_clr=function()
-	return 1+flr(rnd(7))
+	return 2+flr(rnd(6))
 end
 
 -- make blocks
@@ -1020,6 +1118,15 @@ function debug(str)
 	stop()
 end
 
+function contains(val, tbl)
+	for k, v in ipairs(tbl) do
+ 	if v==val	then
+  	return true
+  end
+ end
+	return false
+end
+
 -- timer (tmr)
 
 tmr={}
@@ -1206,12 +1313,12 @@ __gfx__
 00000000000660000000000000000000007700000000000000006600007766000000000000007700000000000077660000000000006600000000000000000000
 00000000000660000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-00770000000000000000770000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-00770000077667700000770000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-00667700077667700077660000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-00667700000770000077660000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-00770000000770000000770000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-00770000000000000000770000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+00770000000000000000770000077000000700000077700000777000000770000070700000777000000000000000000000000000000000000000000000000000
+00770000077667700000770000755000007570000077700000755000007570000070700000757000000000000000000000000000000000000000000000000000
+00667700077667700077660000700000007770000075700000770000007070000070700000775000000000000000000000000000000000000000000000000000
+00667700000770000077660000707000007570000070700000750000007070000070700000757000000000000000000000000000000000000000000000000000
+00770000000770000000770000777000007070000070700000777000007750000057500000707000000000000000000000000000000000000000000000000000
+00770000000000000000770000555000005050000050500000555000005500000005000000505000000000000000000000000000000000000000000000000000
 __sfx__
 000000000202004020080200d020150201a0201e020200201d020190201402010020180201f020250202b0202b02027020220201b02015020110200d0200b010080500605005050030500205001050000500f000
 000100002862026620246200c6200c6201a6201b6201c6201a620156200f62006620066200d6200f62010620116200f6200b6200a620036200862008620096200962008620066200362001620016200062000620
