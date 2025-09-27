@@ -1,8 +1,4 @@
-
-*
-
-!tetra.p8
-!.gitignore
-!COPYING
-!index.html
-!index.js
+.DS_Store
+*.backup
+*.log
+*.tmp
